@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<AssemblyName>QoL</AssemblyName>
+		<Description>Introduces various quality-of-life elements to Nine Sols.</Description>
+		<Version>0.0.1</Version>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>latest</LangVersion>
+		<RestoreAdditionalProjectSources>
+			https://api.nuget.org/v3/index.json;
+			https://nuget.bepinex.dev/v3/index.json;
+			https://nuget.samboy.dev/v3/index.json
+		</RestoreAdditionalProjectSources>
+		<RootNamespace>QoL</RootNamespace>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<GamePath>$(MSBuildProgramFiles32)/Steam/steamapps/common/Nine Sols</GamePath>
+		<LocalRefs>$(GamePath)/NineSols_Data/Managed</LocalRefs>
+		<PluginsPath>$(GamePath)/BepInEx/plugins</PluginsPath>
+	</PropertyGroup>
+
+	<Target Condition="'$(Configuration)' == 'Debug'" Name="CopyMod" AfterTargets="PostBuildEvent">
+		<Copy SourceFiles="$(TargetPath);$(TargetDir)/$(TargetName).pdb" DestinationFolder="$(PluginsPath)/$(TargetName)" />
+	</Target>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<LocalRefs>References</LocalRefs>
+	</PropertyGroup>
+
+	<Target Condition="'$(Configuration)' == 'Release'" Name="PublishVersion" AfterTargets="PostBuildEvent">
+		<WriteLinesToFile File="Version.txt" Lines="$(AssemblyVersion)" Overwrite="true" Encoding="UTF-8" />
+	</Target>
+
+	<ItemGroup>
+		<PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+		<PackageReference Include="BepInEx.Core" Version="5.*" />
+		<PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
+		<PackageReference Include="UnityEngine.Modules" Version="2022.3.18" IncludeAssets="compile" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="Assembly-CSharp">
+			<HintPath>$(LocalRefs)/Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="InControl">
+			<HintPath>$(LocalRefs)/InControl.dll</HintPath>
+		</Reference>
+		<Reference Include="Newtonsoft.Json">
+			<HintPath>$(LocalRefs)/Newtonsoft.Json.dll</HintPath>
+		</Reference>
+		<Reference Include="rcg.rcgmakercore.Runtime">
+			<HintPath>$(LocalRefs)/rcg.rcgmakercore.Runtime.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+</Project>

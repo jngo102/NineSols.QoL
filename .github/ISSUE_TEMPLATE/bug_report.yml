@@ -1,0 +1,60 @@
+name: 🦋 Bug Report
+title: "[Bug] "
+description: Report a bug
+labels: "type: bug"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Before you open an issue:
+        1. Please search for [existing issues](https://github.com/jngo102/NineSols.QoL/issues?q=is%3Aissue) about this problem first.
+        2. Make sure your mod is up-to-date.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear description of what the bug is. Include screenshots and links to video recordings if applicable.
+      placeholder: Bug description
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Change this setting ...
+        2. Do this particular thing ...
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: A clear description of what you expected to happen
+
+  - type: textarea
+    id: user-info
+    attributes:
+      label: User's operating system
+      description: The user's specific operating system (Windows 11, Ubuntu 20.04, macOS Big Sur)
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log content
+      description: |
+        Copy and paste all of the contents from the `LogOutput.txt` file located in the mod directory.
+        This is located at `<NineSolsDirectory>/BepInEx/LogOutput.txt`.
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Please add any other context about the problem here

@@ -1,0 +1,107 @@
+name: Build and Release
+
+on:
+  push:
+    branches: main
+  pull_request:
+
+env:
+  ARTIFACT_NAME: build-artifact
+  MOD_NAME: QoL
+
+jobs:
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      mod_path: ${{ steps.gen_mod_path.outputs.path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        run: sudo apt install -y nuget mono-devel
+
+      - name: Get References
+        run: |
+          wget ${{ secrets.REFERENCES_LINK }} -O References.zip
+          unzip References.zip -d References
+
+      - name: Restore packages
+        run: dotnet restore
+
+      - name: Build project
+        run: dotnet build --configuration Release
+
+      - name: Generate mod path
+        id: gen_mod_path
+        run: echo "path=bin/Release/net48/${{ env.MOD_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact
+        id: upload_artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: |
+            ${{ steps.gen_mod_path.outputs.path }}.dll
+            ${{ steps.gen_mod_path.outputs.path }}.pdb
+
+      - name: Get Assembly version
+        id: get_version
+        run: echo "version=$(cat Version.txt)" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: Release v${{ steps.get_version.outputs.version }}
+          body_path: ChangeLog.md
+          draft: false
+          prerelease: false
+  build:
+    needs: release
+    strategy:
+      matrix:
+        os:
+          [
+            { version: windows-latest, suffix: Windows, filter: win },
+            { version: macos-latest, suffix: macOS, filter: macos },
+          ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+
+      - name: Package with BepInEx
+        id: package
+        run: |
+          DOWNLOAD_URL=$(curl --request GET https://api.github.com/repos/BepInEx/BepInEx/releases/latest | jq -r '.assets[] | select(.name | contains("${{ matrix.os.filter }}_x64")) | .browser_download_url')
+          wget $DOWNLOAD_URL -O BepInEx.zip
+          unzip BepInEx.zip -d BepInEx
+          PLUGINS_PATH=BepInEx/BepInEx/plugins
+          mkdir -p $PLUGINS_PATH
+          ARTIFACT_PATH=${{ env.MOD_NAME }}
+          mv $ARTIFACT_PATH.dll $ARTIFACT_PATH.pdb ReadMe.md $PLUGINS_PATH
+          cd BepInEx
+          ZIP_FILE=${{ env.MOD_NAME }}_${{ matrix.os.suffix }}.zip
+          zip -r $ZIP_FILE *
+          echo "zipfile=BepInEx/$ZIP_FILE" >> $GITHUB_OUTPUT
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.package.outputs.zipfile }}
+          asset_name: ${{ steps.package.outputs.zipfile }}
+          asset_content_type: application/zip
