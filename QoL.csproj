@@ -4,7 +4,7 @@
 		<TargetFramework>net48</TargetFramework>
 		<AssemblyName>QoL</AssemblyName>
 		<Description>Introduces various quality-of-life elements to Nine Sols.</Description>
-		<Version>0.0.1</Version>
+		<Version>0.0.2</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RestoreAdditionalProjectSources>
@@ -56,6 +56,9 @@
 		</Reference>
 		<Reference Include="rcg.rcgmakercore.Runtime">
 			<HintPath>$(LocalRefs)/rcg.rcgmakercore.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="UniTask">
+			<HintPath>$(LocalRefs)/UniTask.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
