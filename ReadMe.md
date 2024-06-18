@@ -12,7 +12,7 @@ Adds a variety of quality-of-life improvements to the game Nine Sols.
 
 When the game is closed with this mod active, it will create a settings file located at `%APPDATA%/../LocalLow/RedCandleGames/NineSols/QoL/settings.json`. Here you can configure the mod. Here are brief descriptions of each setting available for configuration:
 1.  SkipLogo: *Whether to skip the intro logo scene when launching the game.*
-2.  AutoSaveSlotId: *The ID of the save slot to automatically load on game startup.*
+2.  AutoSaveSlotId: *The ID of the save slot to automatically load on game startup. Values range from 0 to 3, inclusively.*
 3.  SkippableCutscenes: *Whether to have optionally skippable cutscenes.*
 
 

@@ -14,17 +14,31 @@ namespace QoL;
 public class Plugin : BaseUnityPlugin {
     public string settingsPath = Path.Combine(Application.persistentDataPath, Assembly.GetExecutingAssembly().GetName().Name, "settings.json");
 
-    private Settings Settings { get; set; } = new();
+    internal static Plugin Instance { get; private set; }
+    
+    internal Settings Settings { get; private set; } = new();
 
     private const string LogoSceneName = "Logo";
     private const string TitleScreenSceneName = "TitleScreenMenu";
 
+    private Scene _previousScene;
     private Scene _loadedScene;
 
+    /// <summary>
+    /// Whether the main menu scene was loaded from launching the game, NOT when quitting to it from a gameplay scene.
+    /// </summary>
+    internal bool LoadedMainMenuFromStart =>
+        string.IsNullOrEmpty(_previousScene.name) && _loadedScene.name is TitleScreenSceneName;
+
     private void Awake() {
+        Instance = this;
         Settings = LoadSettings();
-        SceneManager.sceneLoaded += (scene, _) => _loadedScene = scene; 
+        SceneManager.sceneLoaded += (scene, _) => {
+            _previousScene = _loadedScene;
+            _loadedScene = scene;
+        }; 
         CheckSettings();
+        PatchManager.Initialize();
     }
 
     private void Update() {
@@ -46,10 +60,6 @@ public class Plugin : BaseUnityPlugin {
         if (Settings.SkipLogo) {
             SceneManager.sceneLoaded += (_, _) => SkipLogo();
         }
-
-        if (Settings.AutoLoadSaveId is >= 0 and < 4) {
-            SceneManager.sceneLoaded += async (_, _) => await AutoLoadSave(Settings.AutoLoadSaveId);
-        }
     }
 
     /// <summary>
@@ -60,20 +70,7 @@ public class Plugin : BaseUnityPlugin {
             SceneManager.LoadScene(TitleScreenSceneName);
         }
     }
-
-    /// <summary>
-    /// Automatically load a save file.
-    /// </summary>
-    /// <param name="saveId">The ID of the save to load.</param>
-    private async UniTask AutoLoadSave(int saveId = 0) {
-        if (_loadedScene.name != TitleScreenSceneName) return;
-        Logger.LogInfo("Loading save at slot " + saveId);
-        var saveSlotButton = FindObjectsOfType<SaveSlotUIButton>(true).FirstOrDefault(btn => btn.index == saveId);
-        if (!saveSlotButton) return;
-        await UniTask.Delay(10);
-        saveSlotButton.Submit();
-    }
-
+    
     /// <summary>
     /// Load QoL configuration settings from disk.
     /// </summary>
@@ -105,5 +102,13 @@ public class Plugin : BaseUnityPlugin {
             Directory.CreateDirectory(settingsDir);
         }
         File.WriteAllText(settingsPath, settingsJson);
+    }
+    
+    /// <summary>
+    /// Log a message; for developer use.
+    /// </summary>
+    /// <param name="message">The message to log.</param>
+    internal void Log(object message) {
+        Logger.LogInfo(message);
     }
 }
